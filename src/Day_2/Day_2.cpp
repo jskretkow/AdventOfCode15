@@ -1,73 +1,86 @@
 #include <iostream>
 #include <fstream>
-#include <limits>
 #include <array>
+#include <algorithm>
+#include <sstream>
 
-struct Box
+struct GiftBox
 {
-    Box(int w_, int l_, int h_):
-        w(w_),
-        l(l_),
-        h(h_) {}
-
     int w;
     int l;
     int h;
 
+    /*
+      ...[from TASK]
+      Fortunately, every present is a box (a perfect right rectangular prism),
+      which makes calculating the required wrapping paper for each gift a little easier:
+      find the surface area of the box, which is 2*l*w + 2*w*h + 2*h*l.
+      The elves also need a little extra paper for each present: the area of the smallest side.
+    */
+
     int calculateGiftWrap()
     {
-        return 2*l*w + 2*w*h + 2*h*l + getSmallesSide();
+        return (2 * l * w) + (2 * w * h) + (2 * h * l) + getSmallestSideArea();
     }
 
-    int getSmallesSide()
+    int getSmallestSideArea()
     {
-        int first = std::numeric_limits<int>::max();
-        int second = std::numeric_limits<int>::max();
+        std::array<int, 3> dims  {w, l , h};
+        std::sort(dims.begin(), dims.end());
 
-        std::array<int, 3> arr  {w, l , h};
-
-        for (auto i : arr)
-        {
-            if (i <= first)
-            {
-                second = first;
-                first = i;
-            }
-            else if (i < second  && i != first)
-                second = i;
-
-        }
-        std::cout << "Box dimensions are: w = " << w << ", l = " << l << ", h = " << h <<
-            "SMALLES :: " << first  << ", "  << second << std::endl;
-
-        return first * second;
+        return dims[0] * dims[1];
     }
 
+    int getSmallestSidePerimeter()
+    {
+        std::array<int, 3> dims  {w, l , h};
+        std::sort(dims.begin(), dims.end());
 
+        return 2* dims[0] + 2 * dims[1];
+    }
 
+    int getRibbonBow()
+    {
+        return w * l * h;
+    }
+
+    int getRibbon()
+    {
+        return getSmallestSidePerimeter() + getRibbonBow();
+    }
 };
 
-int main()
+class Day2
 {
-    std::ifstream inputFile("input");
-    char sep1, sep2;
-    int w,l,h;
-
-    long int giftWrap = 0;
-    while(inputFile >> l  >> sep1 >> w >> sep2 >>  h)
+public:
+    static GiftBox parseLine(std::string line)
     {
-        Box box{w,l,h};
-        std::cout << "Gift wrap needed for box : " <<box.calculateGiftWrap() << std::endl;
+        std::istringstream ifStrLine(line);
 
-        giftWrap += box.calculateGiftWrap();
+        char sep1, sep2;
+        int w {0};
+        int l {0};
+        int h {0};
+
+        ifStrLine >> l  >> sep1 >> w >> sep2 >>  h;
+        GiftBox box {w, l, h};
+
+        return box;
     }
 
-    std::cout << "Full Gift wrap needed for boxes : " << giftWrap << std::endl;
+    static std::pair<int, int> solvePart1And2(std::ifstream& inputFile)
+    {
+        int giftWrap {0};
+        int ribbon {0};
+        std::string line;
 
-    Box x {1, 1 , 10};
-    std::cout << "Full Gift wrap needed for boxes : " << x.calculateGiftWrap() << std::endl;
+        while(std::getline(inputFile, line))
+        {
+            GiftBox box = parseLine(line);
+            giftWrap += box.calculateGiftWrap();
+            ribbon += box.getRibbon();
 
-
-
-    return 0;
-}
+        }
+        return {giftWrap, ribbon};
+    }
+};
